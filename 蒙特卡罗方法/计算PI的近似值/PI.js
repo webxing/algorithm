@@ -1,3 +1,11 @@
+/*
+ * @Author: Liuxin   微信: L2315496341 欢迎交流 
+ * @Date: 2019-01-11 14:37:41 
+ * @Last Modified by:   Liuxin 
+ * @Last Modified time: 2019-01-11 14:37:41 
+ */
+
+
 // PI = 4 * cirleArea / squareArea
 // 用蒙特卡罗算法的思想就是随机往正方形里打点，圆内的点个数之和近似于圆的面积，打点总数近似于正方形的面积
 // PI = 4 * 圆内的点 / 打点总数
