@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  
+</body>
+
+<script>
+  // 模拟随机队列 -- 生成随机迷宫
+  class Queue {
+    constructor() {
+      this.queue = []
+    }
+    push(pos) {
+     if ( Math.random() < 0.5) {
+      this.queue.push(pos)
+     } else {
+      this.queue.unshift(pos)
+     }
+    }
+    pop() {
+      if ( Math.random() < 0.5) {
+        return this.queue.pop()
+      } else {
+        return this.queue.shift()
+      }
+    }
+    empty() {
+      return !this.queue.length
+    }
+  }
+  // 模拟队列  -- 自动寻解
+  class QueueFindPath {
+    constructor() {
+      this.queue = []
+    }
+    push(pos) {
+      this.queue.push(pos)
+    }
+    pop() {
+      return this.queue.shift()
+    }
+    empty() {
+      return !this.queue.length
+    }
+  }
+  // 自动生成迷宫
+  class Maze {
+    constructor(row, col, paintProgressTime, width = 500, height = 500) {
+      // 类名
+      this.class = Math.random().toFixed(2)
+      // Maze行列
+      this.row = row
+      this.col = col
+      // 迷宫的长宽
+      this.width = width
+      this.height = height
+      // 设置路与墙
+      this.road = ' '
+      this.wall = '#'
+      // 入口坐标（1, 0）
+      this.entryX = 1
+      this.entryY = 0
+      // 出口坐标（倒数第二行， 最后一列）
+      this.outX = row - 2
+      this.outY = col - 1
+      // 迷宫数据
+      this.maze = []
+      // 生成迷宫时各节点的遍历情况
+      this.visited = []
+      // 求解迷宫时各节点的遍历情况
+      this.findPathVisited = []
+      // 设置上下左右的偏移坐标值（上右下左）
+      this.offset = [[-1, 0], [0, 1], [1, 0], [0, -1]]
+      // 迷宫是否生成完成
+      this.hasDown = false
+      // 迷宫是否有解
+      this.hasFindPath = false
+      // 存储迷宫某点的上一点位置
+      this.path = []
+      // 可视化展示间隔
+      this.paintProgressTime = paintProgressTime
+      this.i = 0  // 可视化展示索引
+    }
+
+    // 初始化迷宫数据
+    initData(maze) {
+      for (let i = 0; i < this.row; i++) {
+        maze[i] = new Array(this.col).fill(this.wall) //  初始化二维数组
+        this.visited[i] = new Array(this.col).fill(false) // 初始化访问状态为false
+        this.findPathVisited[i] = new Array(this.col).fill(false) // 初始化访问状态为false
+        this.path[i] = new Array(this.col).fill(null) // 初始化所有元素的上一个元素为null
+        for (let j = 0; j < this.col; j++) {
+          // 横纵坐标均为奇数 则是路
+          if (i % 2 === 1 && j % 2 === 1) {
+            maze[i][j] = this.road
+          }
+        }
+      }
+      // 入口及出口 则是路
+      maze[this.entryX][this.entryY] = this.road
+      maze[this.outX][this.outY] = this.road
+
+      return maze
+    }
+    // 初始化迷宫DOM
+    initDOM(maze) {
+      let oDiv = document.createElement('div')
+      oDiv.style.width = this.width + 'px'
+      oDiv.style.height = this.height + 'px'
+      oDiv.style.display = 'flex'
+      oDiv.style.flexWrap = 'wrap'
+      oDiv.style.marginBottom = '20px'
+      for (let i = 0; i < maze.length; i++) {
+        for (let j = 0; j < maze[i].length; j++) {
+          let oSpan = document.createElement('span')
+          oSpan.dataset.index = i + '-' + j + '-' + this.class
+          oSpan.style.width = (this.width / this.col).toFixed(2) + 'px'
+          oSpan.style.height = (this.height / this.row).toFixed(2) + 'px'
+          // 加边框
+          // oSpan.style.border = '1px solid #ccc'
+          // oSpan.style.boxSizing = 'border-box'
+          oSpan.style.background = maze[i][j] === this.wall ? '#4facfe' : '#fff'
+          oDiv.appendChild(oSpan)
+        }
+      }
+      document.body.appendChild(oDiv)
+    }
+
+    // 初始化迷宫
+    initMaze() {
+      // 迷宫数据
+      let maze = this.initData(this.maze)
+      // 初始迷宫DOM
+      this.initDOM(maze)
+    }
+
+    // 重新渲染迷宫 改变的格子坐标为（i, j）
+    resetMaze(x, y, type) {
+      // 只有不越界的点才做后续处理
+      if (this.isArea(x, y)) {
+        // 改变this.maze中对应的数据
+        this.maze[x][y] = type
+        // 改变dom中对应的节点颜色
+        let changeSpan = document.querySelector(`span[data-index='${x}-${y}-${this.class}']`)
+        changeSpan.style.background = type === this.wall ? '#4facfe' : '#fff'
+      }
+    }
+
+    // 渲染迷宫
+    paintMaze() {
+      this.initMaze()
+
+      let queue = new Queue()
+      queue.push({x: this.entryX, y: this.entryY + 1})
+      this.visited[this.entryX][this.entryY + 1] = true
+
+      while (!queue.empty()) {
+        let curPos = queue.pop()
+        for (let i = 0; i < 4; i++) {
+          let newX = curPos.x + this.offset[i][0] * 2  // 两步是 *2
+          let newY = curPos.y + this.offset[i][1] * 2
+          // 坐标没有越界 而且 没有被访问过
+          if (this.isArea(newX, newY) && !this.visited[newX][newY]) {
+            this.resetMaze((newX + curPos.x) / 2, (newY + curPos.y) / 2, this.road) // 打通两个方块之间的墙
+            queue.push({x: newX, y: newY})
+            this.visited[newX][newY] = true
+          }
+        }
+      }
+      this.hasDown = true
+      return this
+    }
+
+    // 判断坐标是否越界
+    isArea(x, y) {
+      return x > 0 && x < this.row - 1 && y > 0 && y < this.col - 1 || x == this.entryX && y == this.entryY || x == this.outX && y == this.outY
+    }
+
+    // 迷宫自动求解
+    findPath() {
+      if (!this.hasDown) throw new Error('请等待迷宫生成后再求解！')
+      let queueFindPath = new QueueFindPath()
+      queueFindPath.push({x: this.entryX, y: this.entryY}) // 入栈
+      while (!queueFindPath.empty()) {
+        let curPos = queueFindPath.pop()
+        this.findPathVisited[curPos.x][curPos.y] = true // 求解时访问过
+        this.findPathReset(curPos.x, curPos.y)  // 渲染当前点
+        // 找到出口
+        if (curPos.x === this.outX && curPos.y === this.outY) {
+          this.hasFindPath = true
+
+          // 绘制解
+          this.findPathReset(curPos.x, curPos.y, 'red') // 绘制出口
+          let prePos = this.path[curPos.x][curPos.y] // 获取上一个点
+          while(prePos != null) {
+            this.findPathReset(prePos.x, prePos.y, 'red')  // 渲染上一个点
+            prePos = this.path[prePos.x][prePos.y] // 获取上一个点的上一个点
+          }
+
+          break;
+        }
+        
+        for (let i = 0; i < 4; i++) {
+          let newX = curPos.x + this.offset[i][0]
+          let newY = curPos.y + this.offset[i][1]
+          if (this.isArea(newX, newY) && this.maze[newX][newY] === this.road && !this.findPathVisited[newX][newY]) {
+            this.path[newX][newY] = {x: curPos.x, y: curPos.y} // 记录新的点以及该点由谁走过来
+            queueFindPath.push({x: newX, y: newY}) // 入栈
+          }
+        }
+      }
+      if(!this.hasFindPath) throw new Error('迷宫无解！')
+    }
+
+    // 渲染迷宫指定位置
+    findPathReset(x, y, color = '#cd9cf2') {
+      if (!this.paintProgressTime) {
+        this.findPathSpan(x, y, color)
+        return
+      }
+      this.i++ // 可视化展示
+      setTimeout(() => { // 可视化展示
+        this.findPathSpan(x, y, color)
+      }, this.i * this.paintProgressTime);
+    }
+    findPathSpan(x, y, color) {
+      // 只有不越界的点才做后续处理
+      if (this.isArea(x, y)) {
+        // 改变dom中对应的节点颜色
+        let changeSpan = document.querySelector(`span[data-index='${x}-${y}-${this.class}']`)
+        changeSpan.style.background = color
+      }
+    }
+  }
+
+  let mazeHasDown = new Maze(25, 25, 0, 200, 200).paintMaze().findPath()
+  let maze = new Maze(45, 45, 20, 400, 400).paintMaze().findPath()
+
+</script>
+</html>
+
+<style>
+</style>

@@ -8,3 +8,4 @@
 
 [迷宫问题](https://github.com/webxing/algorithm/tree/master/%E8%BF%B7%E5%AE%AB%E9%97%AE%E9%A2%98)
 - [自动生成](https://github.com/webxing/algorithm/tree/master/%E8%BF%B7%E5%AE%AB%E9%97%AE%E9%A2%98/%E8%87%AA%E5%8A%A8%E7%94%9F%E6%88%90)
+- [自动求解]()
