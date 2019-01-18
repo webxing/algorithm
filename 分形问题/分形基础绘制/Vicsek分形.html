@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+<script>
+  class Fractal {
+    constructor(depth, paintProgressTime) {
+      // 画布长宽
+      this.width = Math.min(document.documentElement.clientWidth, document.documentElement.clientHeight) / 2 - 10
+      this.height = Math.min(document.documentElement.clientWidth, document.documentElement.clientHeight) / 2 - 10
+      // depth 绘制深度 即绘制多少次
+      this.depth = depth || 0
+      // paintProgressTime 自动分形动画间隔
+      this.paintProgressTime = paintProgressTime
+    }
+
+    // 初始化canvas
+    init() {
+      let oCanvas = document.createElement('canvas')
+      oCanvas.id = 'canvas' + Math.floor(Math.random() * 1000 )
+      oCanvas.width = this.width
+      oCanvas.height = this.height
+      oCanvas.style.background = '#000'
+      document.body.appendChild(oCanvas)
+      return oCanvas.getContext('2d')
+    }
+    
+    // 绘制图形
+    draw(ctx, depth = this.depth, x = 0, y = 0, w = this.width, h = this.width) {
+
+      ctx.fillStyle = '#ccc';
+
+      if (depth <= 0 && depth != undefined || w <= 1 || h <= 1) {
+        // 绘制
+        ctx.fillRect(x, y, w, h)
+        return
+      }
+
+      this.depth = depth
+
+      // 要绘制的格子容器中的小格子的宽高  将格子容器划分为3 * 3 的矩阵 根据位置分别绘制小格子
+      let w_3 = w / 3
+      let h_3 = h / 3
+
+      // 递归绘制每个格子的5个方向
+      this.draw(ctx, depth - 1,x, y, w_3, h_3)
+      this.draw(ctx, depth - 1, x + 2 * w_3, y, w_3, h_3)
+      this.draw(ctx, depth - 1, x + 2 * w_3, y + 2 * w_3, w_3, h_3)
+      this.draw(ctx, depth - 1, x + w_3, y + w_3, w_3, h_3)
+      this.draw(ctx, depth - 1, x, y + 2 * w_3, w_3, h_3) 
+    }
+
+    // 呈现绘制结果
+    paint() {
+      let ctx = this.init()
+      if (!this.paintProgressTime) {
+        this.draw(ctx)
+        return
+      }
+
+      let all = this.depth
+      let count = 0
+      let timer = setInterval(() => {
+        if (count >= all) {
+          clearInterval(timer)
+        }
+        ctx.clearRect(0, 0, this.width, this.height);
+        this.draw(ctx, count)
+        count++
+      }, this.paintProgressTime);
+    }
+  }
+
+  new Fractal(6).paint()
+  new Fractal(6, 500).paint()
+
+
+</script>
+</body>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0
+}
+canvas {
+  margin-right: 10px;
+}
+</style>
+</html>

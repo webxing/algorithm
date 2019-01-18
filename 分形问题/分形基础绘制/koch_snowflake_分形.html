@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+<script>
+  class Fractal {
+    constructor(depth, paintProgressTime) {
+      // 画布长宽
+      this.width = Math.max(document.documentElement.clientWidth, document.documentElement.clientHeight) / 2 - 10
+      this.height = Math.min(document.documentElement.clientWidth, document.documentElement.clientHeight) / 2 - 10
+      // depth 绘制深度 即绘制多少次
+      this.depth = depth || 0
+      // paintProgressTime 自动分形动画间隔
+      this.paintProgressTime = paintProgressTime
+    }
+
+    // 初始化canvas
+    init() {
+      let oCanvas = document.createElement('canvas')
+      oCanvas.id = 'canvas' + Math.floor(Math.random() * 1000 )
+      oCanvas.width = this.width
+      oCanvas.height = this.height
+      oCanvas.style.background = '#000'
+      document.body.appendChild(oCanvas)
+      return oCanvas.getContext('2d')
+    }
+    
+    // 绘制图形
+    draw(ctx, depth = this.depth, x1 = 0, y1 = this.width / 2, side = this.width, deg = 0) {
+
+      ctx.strokeStyle = '#fff';
+
+      let w_3 = side / 3
+
+      if (depth < 0 && depth != undefined || w_3 <= 1) {
+        let x2 = x1 + Math.cos(2 * Math.PI / 360 * deg) * side
+        let y2 = y1 - Math.sin(2 * Math.PI / 360 * deg) * side
+        this.line(ctx, x1, y1, x2, y2)
+        return
+      }
+
+      let x2 = x1 + Math.cos(2 * Math.PI / 360 * deg) * w_3
+      let y2 = y1 - Math.sin(2 * Math.PI / 360 * deg) * w_3
+      this.draw(ctx, depth - 1, x1, y1, w_3, deg)
+
+      let x3 = x2 + w_3 * Math.cos(2 * Math.PI / 360 * (deg + 60))
+      let y3 = y2 - w_3 * Math.sin(2 * Math.PI / 360 * (deg + 60))
+      this.draw(ctx, depth - 1, x2, y2, w_3, deg + 60)
+
+      let x4 = x3 + w_3 * Math.cos(2 * Math.PI / 360 * (deg - 60))
+      let y4 = y3 - w_3 * Math.sin(2 * Math.PI / 360 * (deg - 60))
+      this.draw(ctx, depth - 1, x3, y3, w_3, deg - 60)
+
+      this.draw(ctx, depth - 1, x4, y4, w_3, deg)
+    }
+
+    // 绘制线条
+    line(ctx, x1, y1, x2, y2) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.closePath();
+      ctx.stroke();
+    }
+
+    // 呈现绘制结果
+    paint() {
+      let ctx = this.init()
+      if (!this.paintProgressTime) {
+        this.draw(ctx)
+        return
+      }
+
+      let all = this.depth
+      let count = 0
+      let timer = setInterval(() => {
+        if (count >= all) {
+          clearInterval(timer)
+        }
+        console.log(0, 0, this.width, this.height);
+        ctx.clearRect(0, 0, this.width, this.height);
+        this.draw(ctx, count)
+        count++
+      }, this.paintProgressTime);
+    }
+  }
+
+  new Fractal(5).paint()
+  new Fractal(5, 500).paint()
+
+
+</script>
+</body>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0
+}
+canvas {
+  margin-right: 10px;
+}
+</style>
+</html>

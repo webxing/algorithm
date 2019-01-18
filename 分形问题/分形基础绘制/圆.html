@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+<script>
+  class Fractal {
+      constructor(depth, step, x , y, r) {
+        // 画布长宽
+        this.width = Math.min(document.documentElement.clientWidth, document.documentElement.clientHeight)
+        this.height = Math.min(document.documentElement.clientWidth, document.documentElement.clientHeight)
+        // depth 绘制深度 即绘制多少次
+        this.depth = depth
+        // (x, y) 圆心
+        this.x = x || this.width / 2
+        this.y = y || this.height / 2
+        // r 半径
+        this.r = r || this.x / 2
+        // step 步长 每次变化多少
+        this.step = step || 2
+      }
+
+      // 初始化canvas
+      init() {
+        let oCanvas = document.createElement('canvas')
+        oCanvas.id = 'canvas'
+        oCanvas.width = this.width
+        oCanvas.height = this.height
+        oCanvas.style.background = '#000'
+        document.body.appendChild(oCanvas)
+        return oCanvas.getContext('2d')
+      }
+      
+      // 绘制图形
+      draw(ctx) {
+        // 传depth了而且已经绘制够了depth次  或者  没有传depth而且绘制到了尽头
+        if (!this.depth && this.depth != undefined || this.depth == undefined && this.r < 0) return
+
+        ctx.beginPath()
+        ctx.strokeStyle = '#fff';
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.stroke()
+        ctx.closePath()
+        this.depth && this.depth--
+
+        this.r -= this.step
+        this.draw(ctx)
+      }
+
+      // 呈现绘制结果
+      paint() {
+        this.draw(this.init())
+      }
+    }
+
+    
+  new Fractal().paint()
+
+</script>
+</body>
+
+<style>
+  html, body {
+    margin: 0;
+    padding: 0
+  }
+  </style>
+</html>

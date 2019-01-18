@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+<script>
+  class Fractal {
+    constructor(depth, paintProgressTime) {
+      // 画布长宽
+      this.side = Math.min(document.documentElement.clientWidth, document.documentElement.clientHeight) / 2 - 10
+      // depth 绘制深度 即绘制多少次
+      this.depth = depth || 0
+      // paintProgressTime 自动分形动画间隔
+      this.paintProgressTime = paintProgressTime
+    }
+
+    // 初始化canvas
+    init() {
+      let oCanvas = document.createElement('canvas')
+      oCanvas.id = 'canvas' + Math.floor(Math.random() * 1000 )
+      oCanvas.width = this.side
+      oCanvas.height = this.side
+      oCanvas.style.background = '#000'
+      document.body.appendChild(oCanvas)
+      return oCanvas.getContext('2d')
+    }
+    
+    // 绘制图形
+    draw(ctx, depth = this.depth, Ax = 0, Ay = this.side, side = this.side, all = this.depth) {
+
+      ctx.fillStyle = '#ccc';
+      // 计算三角形其余两点坐标
+      let Bx = Ax + side
+      let By = Ay
+      let Cx = Ax + side / 2
+      let Cy = Ay - Math.sin( 2 * Math.PI / 360 * 60) * side
+
+      if (depth <= 0 && depth != undefined || side <= 1) {
+        // 传入三点坐标
+        this.triangle(ctx, Ax, Ay,Bx, By, Cx, Cy)
+        return
+      }
+
+      // 递归 在左下角坐标为 （Ax, Ay）且边长为 side 的正方形中绘制三个等边三角形
+      this.draw(ctx, depth - 1, Ax, Ay, side / 2, all)
+      this.draw(ctx, depth - 1, (Ax + Bx) / 2, (Ay + By) / 2, side / 2, all)
+      this.draw(ctx, depth - 1, (Ax + Cx) / 2, (Ay + Cy) / 2, side / 2, all)
+
+    }
+    // 绘制三角形 传入三点的坐标
+    triangle(ctx, x1, y1, x2, y2, x3, y3) {
+      ctx.beginPath()
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x3, y3);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // 呈现绘制结果
+    paint() {
+      let ctx = this.init()
+      if (!this.paintProgressTime) {
+        this.draw(ctx)
+        return
+      }
+
+      let all = this.depth
+      let count = 0
+      let timer = setInterval(() => {
+        if (count >= all) {
+          clearInterval(timer)
+        }
+        ctx.clearRect(0, 0, this.side, this.side);
+        this.draw(ctx, count)
+        count++
+      }, this.paintProgressTime);
+    }
+  }
+
+  new Fractal(7).paint()
+  new Fractal(7, 500).paint()
+
+
+</script>
+</body>
+
+<style>
+html, body {
+  margin: 0;
+  padding: 0
+}
+canvas {
+  margin-right: 10px;
+}
+</style>
+</html>
